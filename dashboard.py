@@ -14,9 +14,6 @@ import os
 mrt_stations = pd.read_csv("data/mrt_stations.csv")
 bus_routes_combined = pd.read_csv("data/bus_routes_combined.csv")
 
-# Drop bus services ending with alphabets from the DataFrame
-bus_routes_combined = bus_routes_combined[~bus_routes_combined['ServiceNo'].str.contains(r'[A-Za-z]$', regex=True)]
-
 # Kept the unfiltered version for analysis for alternative bus overlaps & passenger calc.
 bus_routes_combined['geometry'] = bus_routes_combined.apply(lambda x: Point((x.Longitude, x.Latitude)), axis=1)
 bus_routes_combined = gpd.GeoDataFrame(bus_routes_combined, geometry='geometry', crs="EPSG:4326")
@@ -81,7 +78,10 @@ for line_code in selected_mrt_lines:
     all_results = pd.concat([all_results, buffer_overlap])
 
 # Sort by highest overlap percentage and take the top 10 bus services overall
+# Drop bus services ending with alphabets from the DataFrame
 all_results = all_results.sort_values(by='Overlap Length', ascending=False)
+all_results = all_results[~all_results['ServiceNo'].str.contains(r'[A-Za-z]$', regex=True)]
+all_results = all_results[all_results["Direction"] == 1]
 all_results = all_results.drop_duplicates(subset=['ServiceNo']).head(10)
 
 # Allow users to select specific bus services
